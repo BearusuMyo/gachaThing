@@ -262,4 +262,17 @@ server.listen(config.port, () => {
   console.log(`Gacha Thing running: http://localhost:${config.port} (mode: ${mode})`);
   console.log(`Admin page:   http://localhost:${config.port}/admin`);
   console.log(`Gacha overlay: http://localhost:${config.port}/gacha`);
+  console.log('Press Ctrl+C to stop safely.');
 });
+
+function shutdown(signal) {
+  console.log(`\n[app] ${signal} received — shutting down safely...`);
+  if (twitchClient) {
+    try { twitchClient.disconnect().catch(() => {}); } catch { /* ignore */ }
+  }
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 2000).unref();
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

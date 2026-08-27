@@ -75,6 +75,11 @@ twitch token -u -s "chat:read chat:edit"
    npm run admin
    ```
 
+   Or double-click `start.bat` (Windows) for a one-click start — it checks for
+   Node, installs dependencies on first run, then runs the server. Press
+   `Ctrl+C` in that window to stop safely (or use `stop.bat` as a hard-stop
+   fallback).
+
 ## Pages
 
 - **Admin (config):** `http://localhost:3000/admin` — add/edit/delete rarities
