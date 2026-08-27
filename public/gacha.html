@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" class="mdui-theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+  <title>Gacha Overlay</title>
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="gacha.css">
+</head>
+<body>
+  <div id="reveal" class="reveal hidden">
+    <mdui-card variant="filled" class="card" id="card">
+      <div class="card-inner">
+        <div class="viewer" id="viewer">@viewer</div>
+        <div class="image">
+          <img id="image" alt="" style="display:none">
+          <span id="fallback" class="fallback">🧸</span>
+        </div>
+        <div class="name" id="name">Plushie Name</div>
+        <div class="rarity-badge" id="rarity">Common</div>
+        <div class="series" id="series">Series</div>
+        <div class="artist" id="artist">by @artist</div>
+        <div class="description" id="description">Description</div>
+      </div>
+    </mdui-card>
+  </div>
+
+  <div id="notify" class="notify hidden">
+    <mdui-card variant="filled" class="notify-card" id="notify-card">
+      <div class="notify-inner">
+        <div class="notify-image-wrap">
+          <img id="notify-image" class="notify-image" alt="" style="display:none">
+          <span id="notify-fallback" class="notify-fallback">🧸</span>
+        </div>
+        <div class="notify-body">
+          <div class="notify-viewer" id="notify-viewer">@viewer</div>
+          <div class="notify-name" id="notify-name">Plushie Name</div>
+          <span class="notify-rarity" id="notify-rarity">Common</span>
+          <div class="notify-series" id="notify-series">Series</div>
+          <div class="notify-artist" id="notify-artist">by @artist</div>
+          <div class="notify-description" id="notify-description">Description</div>
+        </div>
+      </div>
+    </mdui-card>
+  </div>
+
+  <div id="collection" class="collection hidden">
+    <mdui-card variant="filled" class="collection-card">
+      <div class="collection-inner">
+        <div class="collection-header">
+          <span class="collection-title" id="collection-title">Collection</span>
+          <span class="collection-count" id="collection-count"></span>
+        </div>
+        <div class="collection-list" id="collection-list"></div>
+      </div>
+    </mdui-card>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="gacha.js"></script>
+</body>
+</html>

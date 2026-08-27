@@ -1,0 +1,12 @@
+node_modules/
+.env
+data/
+npm-debug.log*
+
+# Plushie images live here; keep the README but ignore user uploads
+public/plushies/*
+!public/plushies/README.md
+
+# Rarity sounds live here; keep the README but ignore user uploads
+public/sounds/*
+!public/sounds/README.md

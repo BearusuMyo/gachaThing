@@ -1,0 +1,375 @@
+@font-face {
+  font-family: 'Next Sunday';
+  src: url('/fonts/NextSunday.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html,
+body,
+:root,
+.mdui-theme-dark {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+  background-color: transparent !important;
+  color-scheme: normal !important;
+}
+
+body {
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+.reveal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.reveal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+mdui-card.card {
+  --rarity-color: #ffffff;
+  position: relative;
+  width: 380px;
+  background: linear-gradient(160deg, #1f2430 0%, #14161f 100%);
+  border: 2px solid var(--rarity-color);
+  border-radius: 22px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 45px 2px var(--rarity-color);
+}
+
+.card-inner {
+  padding: 28px 24px 24px;
+  text-align: center;
+  color: #fff;
+}
+
+.card.pop {
+  animation: pop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.4) rotate(-6deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.viewer {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--rarity-color);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 170px;
+  margin-bottom: 8px;
+}
+
+.image img {
+  width: 170px;
+  height: 170px;
+  object-fit: contain;
+  border-radius: 16px;
+  filter: drop-shadow(0 0 18px var(--rarity-color));
+}
+
+.fallback {
+  font-size: 90px;
+  line-height: 1;
+  filter: drop-shadow(0 0 18px var(--rarity-color));
+}
+
+.name {
+  font-family: 'Next Sunday', 'Open Sans', sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  margin-bottom: 10px;
+}
+
+.rarity-badge {
+  display: inline-block;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f0f0f;
+  background: var(--rarity-color);
+  margin-bottom: 12px;
+}
+
+.series {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #9aa3b2;
+  margin-bottom: 6px;
+}
+
+.artist {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--rarity-color);
+  margin-bottom: 6px;
+}
+
+.description {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #cdd3dc;
+}
+
+/* ---- Notification (corner) reveal ---- */
+
+.notify {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notify.hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}
+
+.notify-card {
+  --rarity-color: #ffffff;
+  width: 360px;
+  max-width: 90vw;
+  border: 2px solid var(--rarity-color);
+  border-radius: 18px;
+  background: linear-gradient(160deg, #1f2430 0%, #14161f 100%);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px 2px var(--rarity-color);
+}
+
+.notify-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+}
+
+.notify-image-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+}
+
+.notify-image {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border-radius: 12px;
+  filter: drop-shadow(0 0 12px var(--rarity-color));
+}
+
+.notify-fallback {
+  font-size: 56px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px var(--rarity-color));
+}
+
+.notify-body {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.notify-viewer {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--rarity-color);
+  margin-bottom: 4px;
+}
+
+.notify-name {
+  font-family: 'Next Sunday', 'Open Sans', sans-serif;
+  font-size: 28px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notify-rarity {
+  display: inline-block;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--rarity-color);
+  color: #0f0f0f;
+  margin-bottom: 8px;
+}
+
+.notify-series {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  color: #9aa3b2;
+  margin-bottom: 4px;
+}
+
+.notify-artist {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--rarity-color);
+  margin-bottom: 4px;
+}
+
+.notify-description {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #cdd3dc;
+}
+
+/* ---- Collection panel ---- */
+
+.collection {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.collection.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.collection.corner {
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.collection.corner .collection-card {
+  width: 380px;
+}
+
+.collection-card {
+  width: 420px;
+  max-width: 90vw;
+  border-radius: 18px;
+  background: rgba(20, 22, 31, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+
+.collection-inner {
+  padding: 20px;
+}
+
+.collection-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.collection-title {
+  font-family: 'Next Sunday', 'Open Sans', sans-serif;
+  font-size: 24px;
+}
+
+.collection-count {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  color: #9aa3b2;
+  white-space: nowrap;
+}
+
+.collection-list {
+  max-height: 52vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.c-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-left: 3px solid #888888;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+}
+
+.c-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.c-thumb-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.c-name {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-count {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  color: #9aa3b2;
+}
+
+.c-empty {
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 13px;
+  color: #9aa3b2;
+  padding: 12px 0;
+}

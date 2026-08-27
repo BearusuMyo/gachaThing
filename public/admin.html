@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" class="mdui-theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+  <title>Gacha Thing — Admin</title>
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <mdui-layout>
+    <mdui-top-app-bar scroll-behavior="elevate">
+      <mdui-button-icon icon="inventory_2"></mdui-button-icon>
+      <mdui-top-app-bar-title>Gacha Thing</mdui-top-app-bar-title>
+      <div style="flex-grow:1"></div>
+      <mdui-button variant="text" icon="visibility" href="/gacha" target="_blank">Open overlay</mdui-button>
+      <mdui-button variant="text" icon="sync" id="rescan">Rescan images</mdui-button>
+      <mdui-button variant="filled" icon="casino" id="test-roll">Test roll</mdui-button>
+    </mdui-top-app-bar>
+
+    <mdui-layout-main>
+      <div class="container">
+
+        <mdui-card variant="filled">
+          <div class="pad">
+            <h2 class="section-title">Settings</h2>
+            <form id="settings-form" class="grid">
+              <mdui-text-field id="set-gacha" label="Gacha command" icon="casino"></mdui-text-field>
+              <mdui-text-field id="set-collection" label="Collection command" icon="inventory_2"></mdui-text-field>
+              <mdui-text-field id="set-cooldown" label="Cooldown (seconds)" type="number" icon="timer"></mdui-text-field>
+              <mdui-text-field id="set-reveal" label="Reveal duration (ms)" type="number" icon="schedule"></mdui-text-field>
+              <mdui-select id="set-reveal-style" label="Reveal style" icon="animation">
+                <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
+                <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
+              </mdui-select>
+              <mdui-select id="set-collection-style" label="Collection style" icon="inventory_2">
+                <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
+                <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
+              </mdui-select>
+              <mdui-button type="submit" variant="tonal">Save settings</mdui-button>
+            </form>
+          </div>
+        </mdui-card>
+
+        <mdui-card variant="filled">
+          <div class="pad">
+            <h2 class="section-title">Rarities</h2>
+            <form id="rarity-form" class="grid">
+              <mdui-text-field id="rarity-name" label="Name" placeholder="Common"></mdui-text-field>
+              <mdui-text-field id="rarity-weight" label="Weight" type="number" placeholder="70"></mdui-text-field>
+              <label class="color-field">
+                <span>Color</span>
+                <input type="color" id="rarity-color" value="#9ca3af">
+              </label>
+              <mdui-select id="rarity-sound" label="Sound" icon="music_note"></mdui-select>
+              <mdui-button type="submit" id="rarity-submit">Add rarity</mdui-button>
+            </form>
+            <mdui-list id="rarity-list"></mdui-list>
+          </div>
+        </mdui-card>
+
+        <mdui-card variant="filled">
+          <div class="pad">
+            <h2 class="section-title">Plushies</h2>
+            <mdui-list id="plushie-list"></mdui-list>
+          </div>
+        </mdui-card>
+
+      </div>
+    </mdui-layout-main>
+  </mdui-layout>
+
+  <mdui-dialog id="plushie-dialog" close-on-esc close-on-overlay-click icon="inventory_2">
+    <span slot="headline" id="plushie-dialog-title">New plushie</span>
+    <form id="plushie-form" class="dialog-form">
+      <mdui-text-field id="plushie-name" label="Name" placeholder="Cocoa Bunny"></mdui-text-field>
+      <mdui-select id="plushie-rarity" label="Rarity"></mdui-select>
+      <mdui-select id="plushie-image" label="Image"></mdui-select>
+      <mdui-text-field id="plushie-series" label="Series" placeholder="Forest Friends"></mdui-text-field>
+      <mdui-text-field id="plushie-artist" label="Artist" placeholder="@artist"></mdui-text-field>
+      <mdui-text-field id="plushie-description" label="Description" placeholder="A warm and fuzzy friend."></mdui-text-field>
+    </form>
+    <mdui-button slot="action" variant="text" id="plushie-cancel">Cancel</mdui-button>
+    <mdui-button slot="action" variant="tonal" type="submit" form="plushie-form" id="plushie-submit">Save plushie</mdui-button>
+  </mdui-dialog>
+
+  <div class="fab-stack">
+    <span id="connection" class="connection off">Disconnected</span>
+    <mdui-fab id="new-plushie-fab" extended icon="add">New plushie</mdui-fab>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

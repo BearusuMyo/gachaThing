@@ -1,0 +1,183 @@
+body {
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+.section-title,
+mdui-top-app-bar-title {
+  font-family: 'Outfit', 'Open Sans', sans-serif;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pad {
+  padding: 20px;
+}
+
+.section-title {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.grid .full {
+  grid-column: 1 / -1;
+}
+
+/* Native color input styled to sit alongside mdui fields */
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(var(--mdui-color-on-surface-variant));
+  padding-top: 2px;
+}
+
+.color-field input[type="color"] {
+  height: 56px;
+  width: 100%;
+  border: 1px solid rgb(var(--mdui-color-outline));
+  border-radius: var(--mdui-shape-corner-extra-small, 8px);
+  background: transparent;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgb(var(--mdui-color-surface-container-high));
+  color: rgb(var(--mdui-color-on-surface-variant));
+  box-shadow: var(--mdui-elevation-level2);
+}
+
+.connection::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.connection.on {
+  color: #4ade80;
+}
+
+.connection.off {
+  color: #f87171;
+}
+
+.fab-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.dialog-form mdui-text-field,
+.dialog-form mdui-select {
+  width: 100%;
+}
+
+/* Rows rendered inside mdui-list-item custom slots */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-sub {
+  font-size: 12px;
+  color: rgb(var(--mdui-color-on-surface-variant));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgb(var(--mdui-color-surface-container-highest));
+  flex-shrink: 0;
+}
+
+.thumb-fallback {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border-radius: 8px;
+  background: rgb(var(--mdui-color-surface-container-highest));
+  flex-shrink: 0;
+}
+
+.rarity-badge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f0f0f;
+  white-space: nowrap;
+}
+
+.empty {
+  color: rgb(var(--mdui-color-on-surface-variant));
+  font-size: 13px;
+  padding: 8px 0;
+}

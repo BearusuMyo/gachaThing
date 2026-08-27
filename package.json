@@ -1,0 +1,22 @@
+{
+  "name": "gacha-thing",
+  "version": "1.0.0",
+  "description": "Twitch chat gacha machine for collecting plushies",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "admin": "node src/server.js --admin",
+    "gacha": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "tmi.js": "^1.8.5"
+  }
+}
