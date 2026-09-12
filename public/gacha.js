@@ -31,7 +31,7 @@ let revealDuration = 6000;
 let revealStyle = 'card';
 let collectionStyle = 'card';
 let collectionTimer = null;
-const COLLECTION_DURATION = 12000;
+const COLLECTION_DURATION = 15000;
 
 const queue = [];
 let busy = false;
@@ -189,7 +189,26 @@ function showNotification(payload) {
   }, revealDuration);
 }
 
+function startAutoScroll(el) {
+  clearInterval(el._scrollTimer);
+  el.scrollTop = 0;
+  if (el.scrollHeight <= el.clientHeight) return;
+  let dir = 1;
+  let wait = 0;
+  el._scrollTimer = setInterval(() => {
+    const max = el.scrollHeight - el.clientHeight;
+    if (wait > 0) { wait--; return; }
+    el.scrollTop += dir;
+    if (el.scrollTop >= max) { dir = -1; wait = 50; }
+    else if (el.scrollTop <= 0) { dir = 1; wait = 50; }
+  }, 25);
+}
+
 function showCollection(data) {
+  clearInterval(collectionListEl._scrollTimer);
+  collectionListEl.scrollTop = 0;
+  collectionEl.classList.toggle('corner', collectionStyle === 'notification');
+
   collectionTitleEl.textContent = `${data.displayName || data.viewer}'s collection`;
 
   if (!data.entries || data.entries.length === 0) {
@@ -201,14 +220,20 @@ function showCollection(data) {
       const thumb = e.image
         ? `<img class="c-thumb" src="/plushies/${encodeURIComponent(e.image)}" alt="">`
         : '<span class="c-thumb c-thumb-empty">🧸</span>';
-      return `<div class="c-row" style="border-left-color:${escapeHtml(e.rarityColor || '#888888')}">
-        ${thumb}<span class="c-name">${escapeHtml(e.name)}</span><span class="c-count">×${e.count}</span>
+      return `<div class="c-card" style="--rarity-color:${escapeHtml(e.rarityColor || '#888888')}">
+        ${thumb}
+        <div class="c-name">${escapeHtml(e.name)}</div>
+        <span class="c-count">×${e.count}</span>
       </div>`;
     }).join('');
   }
 
-  collectionEl.classList.toggle('corner', collectionStyle === 'notification');
   collectionEl.classList.remove('hidden');
   clearTimeout(collectionTimer);
-  collectionTimer = setTimeout(() => collectionEl.classList.add('hidden'), COLLECTION_DURATION);
+  collectionTimer = setTimeout(() => {
+    collectionEl.classList.add('hidden');
+    clearInterval(collectionListEl._scrollTimer);
+  }, COLLECTION_DURATION);
+
+  if (data.entries && data.entries.length > 0) startAutoScroll(collectionListEl);
 }

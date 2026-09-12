@@ -196,10 +196,15 @@ function buildCollectionData(viewer, displayName) {
         image: p ? p.image : null,
         rarityName: rarity ? rarity.name : null,
         rarityColor: rarity ? rarity.color : '#888888',
+        rarityWeight: rarity ? Number(rarity.weight) : null,
         count,
       };
     })
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    .sort((a, b) =>
+      (a.rarityWeight ?? Infinity) - (b.rarityWeight ?? Infinity) ||
+      b.count - a.count ||
+      a.name.localeCompare(b.name)
+    );
 
   return {
     viewer,

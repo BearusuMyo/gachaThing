@@ -283,12 +283,12 @@ mdui-card.card {
 }
 
 .collection.corner .collection-card {
-  width: 380px;
+  width: 420px;
 }
 
 .collection-card {
-  width: 420px;
-  max-width: 90vw;
+  width: 560px;
+  max-width: 92vw;
   border-radius: 18px;
   background: rgba(20, 22, 31, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -320,51 +320,67 @@ mdui-card.card {
 }
 
 .collection-list {
-  max-height: 52vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  max-height: 60vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  align-content: start;
 }
 
-.c-row {
+.c-card {
+  --rarity-color: #888888;
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-left: 3px solid #888888;
+  gap: 6px;
+  padding: 16px 8px 10px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 0 var(--rarity-color);
 }
 
 .c-thumb {
-  width: 28px;
-  height: 28px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
-  border-radius: 6px;
-  flex-shrink: 0;
+  border-radius: 10px;
+  filter: drop-shadow(0 0 8px var(--rarity-color));
 }
 
 .c-thumb-empty {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 40px;
+  width: 56px;
+  height: 56px;
 }
 
 .c-name {
   font-family: 'Open Sans', system-ui, sans-serif;
-  flex: 1;
-  min-width: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  width: 100%;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .c-count {
+  position: absolute;
+  top: 6px;
+  right: 8px;
   font-family: 'Open Sans', system-ui, sans-serif;
-  font-size: 13px;
-  color: #9aa3b2;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--rarity-color);
+  color: #0f0f0f;
+  border-radius: 999px;
+  padding: 1px 8px;
 }
 
 .c-empty {
@@ -372,4 +388,5 @@ mdui-card.card {
   font-size: 13px;
   color: #9aa3b2;
   padding: 12px 0;
+  grid-column: 1 / -1;
 }
