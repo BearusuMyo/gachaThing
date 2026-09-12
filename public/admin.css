@@ -26,6 +26,12 @@ mdui-top-app-bar-title {
   font-weight: 600;
 }
 
+.merge-hint {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: rgb(var(--mdui-color-on-surface-variant));
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

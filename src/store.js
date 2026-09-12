@@ -9,10 +9,14 @@ const FILES = {
   plushies: 'plushies.json',
   collections: 'collections.json',
   settings: 'settings.json',
+  merges: 'merges.json',
+  events: 'events.jsonl',
 };
 
+const MAX_LOG_BYTES = 5 * 1024 * 1024;
+
 const defaultSettings = {
-  commands: { gacha: 'gacha', collection: 'plushies' },
+  commands: { gacha: 'gacha', collection: 'plushies', merge: 'merge', confirm: 'confirm' },
   cooldownSeconds: 30,
   revealDurationMs: 6000,
   revealStyle: 'card',
@@ -28,6 +32,8 @@ const defaultPlushies = {
   ],
   plushies: [],
 };
+
+const defaultMerges = [];
 
 function ensureDir() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -64,6 +70,7 @@ function writeFile(name, data) {
 let plushiesCache = null;
 let collectionsCache = null;
 let settingsCache = null;
+let mergesCache = null;
 
 export function getPlushiesData() {
   if (!plushiesCache) {
@@ -99,4 +106,29 @@ export function getSettings() {
 export function saveSettings(data) {
   settingsCache = data;
   writeFile(FILES.settings, data);
+}
+
+export function getMerges() {
+  if (!mergesCache) {
+    mergesCache = readFile(FILES.merges, defaultMerges);
+  }
+  return mergesCache;
+}
+
+export function saveMerges(data) {
+  mergesCache = data;
+  writeFile(FILES.merges, data);
+}
+
+export function appendEvent(event) {
+  ensureDir();
+  const filePath = path.join(DATA_DIR, FILES.events);
+  const line = `${JSON.stringify({ ts: new Date().toISOString(), ...event })}\n`;
+  try {
+    if (fs.statSync(filePath).size >= MAX_LOG_BYTES) {
+      const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      fs.renameSync(filePath, path.join(DATA_DIR, `events.${stamp}.jsonl`));
+    }
+  } catch { /* file may not exist yet */ }
+  fs.appendFileSync(filePath, line);
 }

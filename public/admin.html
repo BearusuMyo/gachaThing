@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
   <title>Gacha Thing — Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
@@ -32,6 +33,8 @@
             <form id="settings-form" class="grid">
               <mdui-text-field id="set-gacha" label="Gacha command" icon="casino"></mdui-text-field>
               <mdui-text-field id="set-collection" label="Collection command" icon="inventory_2"></mdui-text-field>
+              <mdui-text-field id="set-merge" label="Merge command" icon="swap_horiz"></mdui-text-field>
+              <mdui-text-field id="set-confirm" label="Confirm command" icon="check"></mdui-text-field>
               <mdui-text-field id="set-cooldown" label="Cooldown (seconds)" type="number" icon="timer"></mdui-text-field>
               <mdui-text-field id="set-reveal" label="Reveal duration (ms)" type="number" icon="schedule"></mdui-text-field>
               <mdui-select id="set-reveal-style" label="Reveal style" icon="animation">
@@ -68,6 +71,21 @@
           <div class="pad">
             <h2 class="section-title">Plushies</h2>
             <mdui-list id="plushie-list"></mdui-list>
+          </div>
+        </mdui-card>
+
+        <mdui-card variant="filled">
+          <div class="pad">
+            <h2 class="section-title">Merges</h2>
+            <p class="merge-hint">Sacrifice plushies of a tier to boost the chance of superior tiers on the next roll.</p>
+            <form id="merge-form" class="grid">
+              <mdui-select id="merge-source" label="Source tier" icon="swap_horiz"></mdui-select>
+              <mdui-text-field id="merge-count" label="Required count" type="number" placeholder="5"></mdui-text-field>
+              <mdui-text-field id="merge-bonus" label="Bonus weight" type="number" placeholder="20"></mdui-text-field>
+              <mdui-select id="merge-sound" label="Sound" icon="music_note"></mdui-select>
+              <mdui-button type="submit" id="merge-submit">Add merge</mdui-button>
+            </form>
+            <mdui-list id="merge-list"></mdui-list>
           </div>
         </mdui-card>
 

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
   <title>Gacha Overlay</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
@@ -23,6 +24,7 @@
         </div>
         <div class="name" id="name">Plushie Name</div>
         <div class="rarity-badge" id="rarity">Common</div>
+        <div class="merged-badge" id="merged-badge" style="display:none">MERGED</div>
         <div class="series" id="series">Series</div>
         <div class="artist" id="artist">by @artist</div>
         <div class="description" id="description">Description</div>
@@ -41,6 +43,7 @@
           <div class="notify-viewer" id="notify-viewer">@viewer</div>
           <div class="notify-name" id="notify-name">Plushie Name</div>
           <span class="notify-rarity" id="notify-rarity">Common</span>
+          <span class="merged-badge" id="notify-merged" style="display:none">MERGED</span>
           <div class="notify-series" id="notify-series">Series</div>
           <div class="notify-artist" id="notify-artist">by @artist</div>
           <div class="notify-description" id="notify-description">Description</div>
@@ -60,6 +63,16 @@
       </div>
     </mdui-card>
   </div>
+
+  <div id="fusion" class="fusion hidden">
+    <div class="fusion-stage">
+      <div class="fusion-ring"></div>
+      <div class="fusion-core" id="fusion-core"></div>
+      <div class="fusion-particles" id="fusion-particles"></div>
+    </div>
+  </div>
+
+  <div id="fusion-flash" class="fusion-flash"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="gacha.js"></script>

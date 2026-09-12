@@ -7,6 +7,7 @@ const imageEl = document.getElementById('image');
 const fallbackEl = document.getElementById('fallback');
 const nameEl = document.getElementById('name');
 const rarityEl = document.getElementById('rarity');
+const mergedBadgeEl = document.getElementById('merged-badge');
 const seriesEl = document.getElementById('series');
 const artistEl = document.getElementById('artist');
 const descriptionEl = document.getElementById('description');
@@ -18,6 +19,7 @@ const notifyFallbackEl = document.getElementById('notify-fallback');
 const notifyViewerEl = document.getElementById('notify-viewer');
 const notifyNameEl = document.getElementById('notify-name');
 const notifyRarityEl = document.getElementById('notify-rarity');
+const notifyMergedEl = document.getElementById('notify-merged');
 const notifySeriesEl = document.getElementById('notify-series');
 const notifyArtistEl = document.getElementById('notify-artist');
 const notifyDescriptionEl = document.getElementById('notify-description');
@@ -27,11 +29,16 @@ const collectionTitleEl = document.getElementById('collection-title');
 const collectionCountEl = document.getElementById('collection-count');
 const collectionListEl = document.getElementById('collection-list');
 
+const fusionFlashEl = document.getElementById('fusion-flash');
+const fusionEl = document.getElementById('fusion');
+const fusionParticlesEl = document.getElementById('fusion-particles');
+
 let revealDuration = 6000;
 let revealStyle = 'card';
 let collectionStyle = 'card';
 let collectionTimer = null;
 const COLLECTION_DURATION = 15000;
+const FUSION_DURATION = 1300;
 
 const queue = [];
 let busy = false;
@@ -67,22 +74,33 @@ function getAudio(sound) {
   return audio;
 }
 
+function playSoundFile(file) {
+  return new Promise((resolve) => {
+    if (!file) { resolve(); return; }
+    const audio = getAudio(file);
+    audio.currentTime = 0;
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    audio.addEventListener('ended', finish, { once: true });
+    audio.addEventListener('error', finish, { once: true });
+    setTimeout(finish, 20000);
+    const p = audio.play();
+    if (p && p.catch) {
+      p.catch(() => {
+        // Unmuted autoplay is blocked until a user gesture (or OBS is launched
+        // with --autoplay-policy=no-user-gesture-required). Best-effort: play
+        // muted (always allowed), then unmute.
+        audio.muted = true;
+        audio.play()
+          .then(() => { audio.muted = false; })
+          .catch(finish);
+      });
+    }
+  });
+}
+
 function playSound(rarity) {
-  if (!rarity || !rarity.sound) return;
-  const audio = getAudio(rarity.sound);
-  audio.currentTime = 0;
-  const p = audio.play();
-  if (p && p.catch) {
-    p.catch(() => {
-      // Unmuted autoplay is blocked until a user gesture (or OBS is launched
-      // with --autoplay-policy=no-user-gesture-required). Best-effort: play
-      // muted (always allowed), then unmute.
-      audio.muted = true;
-      audio.play()
-        .then(() => { audio.muted = false; })
-        .catch(() => {});
-    });
-  }
+  if (rarity) playSoundFile(rarity.sound);
 }
 
 // Unlock audio on the first interaction (handy when previewing in a browser).
@@ -135,12 +153,72 @@ function processQueue() {
   if (busy || queue.length === 0) return;
   busy = true;
   const payload = queue.shift();
-  playSound(payload.rarity);
-  if (revealStyle === 'notification') showNotification(payload);
-  else showCard(payload);
+
+  if (payload.merged) {
+    showFusion(payload);
+    const animDone = new Promise((r) => setTimeout(r, FUSION_DURATION));
+    const soundDone = playSoundFile(payload.mergeSound);
+    Promise.all([animDone, soundDone]).then(() => {
+      fusionEl.classList.add('hidden');
+      triggerFusionFlash();
+      playSound(payload.rarity);
+      revealResult(payload, true);
+    });
+  } else {
+    playSound(payload.rarity);
+    revealResult(payload, false);
+  }
 }
 
-function showCard(payload) {
+function revealResult(payload, isFusion) {
+  if (revealStyle === 'notification') showNotification(payload, isFusion);
+  else showCard(payload, isFusion);
+
+  setTimeout(() => {
+    hideAll();
+    busy = false;
+    processQueue();
+  }, revealDuration);
+}
+
+function hideAll() {
+  revealEl.classList.add('hidden');
+  notifyEl.classList.add('hidden');
+  fusionEl.classList.add('hidden');
+}
+
+function triggerFusionFlash() {
+  fusionFlashEl.classList.remove('active');
+  void fusionFlashEl.offsetWidth;
+  fusionFlashEl.classList.add('active');
+}
+
+function showFusion(payload) {
+  const sacrificed = (payload.sacrificed || []).slice(0, 6);
+  const particles = fusionParticlesEl;
+  particles.innerHTML = '';
+
+  const n = Math.max(sacrificed.length, 1);
+  const cx = 160;
+  const cy = 160;
+  const radius = 138;
+  sacrificed.forEach((s, i) => {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const el = document.createElement('div');
+    el.className = 'fusion-particle';
+    el.style.left = `${cx + Math.cos(angle) * radius - 32}px`;
+    el.style.top = `${cy + Math.sin(angle) * radius - 32}px`;
+    el.style.animationDelay = `${(i * 0.12).toFixed(2)}s`;
+    el.innerHTML = s.image
+      ? `<img src="/plushies/${encodeURIComponent(s.image)}" alt="">`
+      : '<span class="p-emoji">🧸</span>';
+    particles.appendChild(el);
+  });
+
+  fusionEl.classList.remove('hidden');
+}
+
+function showCard(payload, isFusion) {
   const { displayName, plushie, rarity } = payload;
   const color = rarity && rarity.color ? rarity.color : '#ffffff';
 
@@ -149,24 +227,19 @@ function showCard(payload) {
   setImage(imageEl, fallbackEl, plushie);
   nameEl.textContent = plushie.name;
   rarityEl.textContent = rarity ? rarity.name : '?';
+  mergedBadgeEl.style.display = payload.merged ? 'inline-block' : 'none';
   seriesEl.textContent = plushie.series ? `Series: ${plushie.series}` : '';
   artistEl.style.display = plushie.artist ? '' : 'none';
   artistEl.textContent = plushie.artist ? `Art by ${plushie.artist}` : '';
   descriptionEl.textContent = plushie.description || '';
 
   revealEl.classList.remove('hidden');
-  cardEl.classList.remove('pop');
+  cardEl.classList.remove('pop', 'fusion');
   void cardEl.offsetWidth;
-  cardEl.classList.add('pop');
-
-  setTimeout(() => {
-    revealEl.classList.add('hidden');
-    busy = false;
-    processQueue();
-  }, revealDuration);
+  cardEl.classList.add(isFusion ? 'fusion' : 'pop');
 }
 
-function showNotification(payload) {
+function showNotification(payload, isFusion) {
   const { displayName, plushie, rarity } = payload;
   const color = rarity && rarity.color ? rarity.color : '#ffffff';
 
@@ -175,18 +248,16 @@ function showNotification(payload) {
   setImage(notifyImageEl, notifyFallbackEl, plushie);
   notifyNameEl.textContent = plushie.name;
   notifyRarityEl.textContent = rarity ? rarity.name : '?';
+  notifyMergedEl.style.display = payload.merged ? 'inline-block' : 'none';
   notifySeriesEl.textContent = plushie.series ? `Series: ${plushie.series}` : '';
   notifyArtistEl.style.display = plushie.artist ? '' : 'none';
   notifyArtistEl.textContent = plushie.artist ? `Art by ${plushie.artist}` : '';
   notifyDescriptionEl.textContent = plushie.description || '';
 
   notifyEl.classList.remove('hidden');
-
-  setTimeout(() => {
-    notifyEl.classList.add('hidden');
-    busy = false;
-    processQueue();
-  }, revealDuration);
+  notifyCardEl.classList.remove('fusion');
+  void notifyCardEl.offsetWidth;
+  if (isFusion) notifyCardEl.classList.add('fusion');
 }
 
 function startAutoScroll(el) {

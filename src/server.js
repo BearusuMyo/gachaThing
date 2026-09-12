@@ -29,7 +29,7 @@ app.get('/gacha', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'gacha.html')
 
 function publicState() {
   const { rarities, plushies } = store.getPlushiesData();
-  return { rarities, plushies, settings: store.getSettings(), images: listImages(), sounds: listSounds() };
+  return { rarities, plushies, settings: store.getSettings(), merges: store.getMerges(), images: listImages(), sounds: listSounds() };
 }
 
 function broadcastState() {
@@ -166,10 +166,77 @@ app.post('/api/rescan', (req, res) => {
   res.json({ ok: true, changed, images: listImages() });
 });
 
+// Merges
+app.get('/api/merges', (req, res) => res.json(store.getMerges()));
+
+app.post('/api/merges', (req, res) => {
+  const { sourceRarity, count, bonusWeight, sound } = req.body || {};
+  if (!sourceRarity) return res.status(400).json({ error: 'sourceRarity is required' });
+  const merges = store.getMerges();
+  const recipe = {
+    id: crypto.randomUUID(),
+    sourceRarity,
+    count: Number(count) || 0,
+    bonusWeight: Number(bonusWeight) || 0,
+    sound: sound || null,
+  };
+  merges.push(recipe);
+  store.saveMerges(merges);
+  broadcastState();
+  res.json(recipe);
+});
+
+app.put('/api/merges/:id', (req, res) => {
+  const merges = store.getMerges();
+  const recipe = merges.find((m) => m.id === req.params.id);
+  if (!recipe) return res.status(404).json({ error: 'merge not found' });
+  const { sourceRarity, count, bonusWeight, sound } = req.body || {};
+  if (sourceRarity !== undefined) recipe.sourceRarity = sourceRarity;
+  if (count !== undefined) recipe.count = Number(count) || 0;
+  if (bonusWeight !== undefined) recipe.bonusWeight = Number(bonusWeight) || 0;
+  if (sound !== undefined) recipe.sound = sound || null;
+  store.saveMerges(merges);
+  broadcastState();
+  res.json(recipe);
+});
+
+app.delete('/api/merges/:id', (req, res) => {
+  const merges = store.getMerges();
+  const idx = merges.findIndex((m) => m.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'merge not found' });
+  merges.splice(idx, 1);
+  store.saveMerges(merges);
+  broadcastState();
+  res.json({ ok: true });
+});
+
+// Simulate a fusion on the overlay (boosted roll, does not persist anything)
+app.post('/api/merges/:id/simulate', (req, res) => {
+  const merges = store.getMerges();
+  const recipe = merges.find((m) => m.id === req.params.id);
+  if (!recipe) return res.status(404).json({ error: 'merge not found' });
+
+  const data = store.getPlushiesData();
+  const source = data.rarities.find((r) => r.id === recipe.sourceRarity);
+  if (!source) return res.status(400).json({ error: 'source rarity not found' });
+
+  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight) });
+  if (!result) return res.status(400).json({ error: 'No plushies available' });
+
+  const sacrificed = data.plushies
+    .filter((p) => p.rarity === recipe.sourceRarity)
+    .slice(0, Math.min(recipe.count, 6))
+    .map((p) => ({ id: p.id, name: p.name, image: p.image, count: 1 }));
+
+  emitReveal({ viewer: 'simulation', displayName: 'Fusion Sim', ...result, merged: true, sacrificed, mergeSound: recipe.sound });
+  res.json(result);
+});
+
 // ---- Gacha engine -------------------------------------------------------
 
 let twitchClient = null;
 const lastRollAt = new Map();
+const pendingMerges = new Map();
 
 function emitReveal(payload) {
   io.emit('gacha:reveal', payload);
@@ -215,7 +282,133 @@ function buildCollectionData(viewer, displayName) {
   };
 }
 
-function handleCommand({ command, viewer, displayName }) {
+function plushieIdsOfRarity(data, rarityId) {
+  return new Set(data.plushies.filter((p) => p.rarity === rarityId).map((p) => p.id));
+}
+
+function countOfRarity(collections, viewer, data, rarityId) {
+  const mine = collections[viewer] || {};
+  const ids = plushieIdsOfRarity(data, rarityId);
+  let total = 0;
+  for (const [id, n] of Object.entries(mine)) {
+    if (ids.has(id)) total += n;
+  }
+  return total;
+}
+
+function takePlushiesOfRarity(mine, data, rarityId, count) {
+  const ids = plushieIdsOfRarity(data, rarityId);
+  const sacrificed = [];
+  let remaining = count;
+  for (const id of Object.keys(mine)) {
+    if (remaining <= 0) break;
+    if (!ids.has(id)) continue;
+    const take = Math.min(mine[id], remaining);
+    mine[id] -= take;
+    if (mine[id] <= 0) delete mine[id];
+    remaining -= take;
+    const p = data.plushies.find((x) => x.id === id);
+    sacrificed.push({ id, name: p ? p.name : 'Unknown', image: p ? p.image : null, count: take });
+  }
+  return sacrificed;
+}
+
+function handleMerge(viewer, displayName, args) {
+  const settings = store.getSettings();
+  const merges = store.getMerges();
+  const data = store.getPlushiesData();
+  const collections = store.getCollections();
+
+  const tierName = (args[0] || '').toLowerCase();
+  const rarity = data.rarities.find((r) => r.name.toLowerCase() === tierName);
+
+  if (!rarity) {
+    const available = merges
+      .map((m) => data.rarities.find((r) => r.id === m.sourceRarity))
+      .filter(Boolean)
+      .map((r) => r.name);
+    twitchClient?.say(config.channel, available.length
+      ? `@${displayName}, merge which tier? Available: ${available.join(', ')}.`
+      : `@${displayName}, no merge tiers are configured yet.`);
+    return;
+  }
+
+  const recipe = merges.find((m) => m.sourceRarity === rarity.id);
+  if (!recipe) {
+    twitchClient?.say(config.channel, `@${displayName}, merging isn't configured for ${rarity.name}.`);
+    return;
+  }
+
+  const owned = countOfRarity(collections, viewer, data, rarity.id);
+  if (owned < recipe.count) {
+    twitchClient?.say(config.channel, `@${displayName}, you need ${recipe.count}× ${rarity.name} to merge, but you have ${owned}.`);
+    store.appendEvent({ type: 'merge-deny', viewer, source: rarity.id, reason: 'insufficient plushies', have: owned, need: recipe.count });
+    return;
+  }
+
+  pendingMerges.set(viewer, { recipeId: recipe.id, expiresAt: Date.now() + 30000 });
+  store.appendEvent({ type: 'merge-request', viewer, source: rarity.id, count: recipe.count });
+  twitchClient?.say(config.channel, `@${displayName}, give up ${recipe.count}× ${rarity.name} for a boosted roll? Type !${settings.commands.confirm} within 30s.`);
+}
+
+function handleConfirm(viewer, displayName) {
+  const settings = store.getSettings();
+  const pending = pendingMerges.get(viewer);
+
+  if (!pending || pending.expiresAt < Date.now()) {
+    pendingMerges.delete(viewer);
+    twitchClient?.say(config.channel, `@${displayName}, nothing to confirm. Type !${settings.commands.merge} <tier> first.`);
+    return;
+  }
+
+  const merges = store.getMerges();
+  const recipe = merges.find((m) => m.id === pending.recipeId);
+  const data = store.getPlushiesData();
+
+  if (!recipe) {
+    pendingMerges.delete(viewer);
+    twitchClient?.say(config.channel, `@${displayName}, that merge is no longer available.`);
+    return;
+  }
+
+  const source = data.rarities.find((r) => r.id === recipe.sourceRarity);
+  if (!source) {
+    pendingMerges.delete(viewer);
+    return;
+  }
+
+  const collections = store.getCollections();
+  const mine = collections[viewer] || (collections[viewer] = {});
+
+  // Authoritative re-check before any mutation.
+  const owned = countOfRarity(collections, viewer, data, source.id);
+  if (owned < recipe.count) {
+    pendingMerges.delete(viewer);
+    store.appendEvent({ type: 'merge-deny', viewer, source: source.id, reason: 'insufficient plushies', have: owned, need: recipe.count });
+    twitchClient?.say(config.channel, `@${displayName}, you no longer have ${recipe.count}× ${source.name}.`);
+    return;
+  }
+
+  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight) });
+  if (!result) {
+    pendingMerges.delete(viewer);
+    twitchClient?.say(config.channel, `@${displayName}, the gacha is empty! Ask the streamer to add plushies.`);
+    return;
+  }
+
+  // Atomic: deduct + add result, then persist once.
+  const sacrificed = takePlushiesOfRarity(mine, data, source.id, recipe.count);
+  mine[result.plushie.id] = (mine[result.plushie.id] || 0) + 1;
+  store.saveCollections(collections);
+
+  pendingMerges.delete(viewer);
+  store.appendEvent({ type: 'merge', viewer, source: source.id, count: recipe.count, result: result.plushie.id, resultRarity: result.rarity.id });
+
+  emitReveal({ viewer, displayName, ...result, merged: true, sacrificed, mergeSound: recipe.sound });
+  twitchClient?.say(config.channel, `@${displayName} merged ${recipe.count}× ${source.name} → ${result.plushie.name} (${result.rarity.name})!`);
+}
+
+function handleCommand({ command, args, viewer, displayName }) {
   const settings = store.getSettings();
   const data = store.getPlushiesData();
 
@@ -237,9 +430,14 @@ function handleCommand({ command, viewer, displayName }) {
 
     lastRollAt.set(viewer, now);
     addToCollection(viewer, result.plushie.id);
+    store.appendEvent({ type: 'roll', viewer, plushie: result.plushie.id, rarity: result.rarity.id });
     emitReveal({ viewer, displayName, ...result });
   } else if (command === settings.commands.collection) {
     io.emit('collection:show', buildCollectionData(viewer, displayName));
+  } else if (command === settings.commands.merge) {
+    handleMerge(viewer, displayName, args || []);
+  } else if (command === settings.commands.confirm) {
+    handleConfirm(viewer, displayName);
   }
 }
 

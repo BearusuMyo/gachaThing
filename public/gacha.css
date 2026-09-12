@@ -65,6 +65,131 @@ mdui-card.card {
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
+.card.fusion {
+  animation: fusion-pop 1s cubic-bezier(0.2, 1.1, 0.3, 1) both;
+}
+
+@keyframes fusion-pop {
+  0% { transform: scale(0.1) rotate(-25deg); opacity: 0; box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
+  30% { transform: scale(0.55) rotate(14deg); opacity: 1; box-shadow: 0 0 55px 8px rgba(255, 170, 0, 0.9); }
+  50% { transform: scale(1.25) rotate(-8deg); box-shadow: 0 0 95px 26px rgba(255, 190, 0, 0.95); }
+  65% { transform: scale(0.9) rotate(4deg); }
+  80% { transform: scale(1.06) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 45px 2px var(--rarity-color); }
+}
+
+.fusion-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 224, 130, 0.95) 0%, rgba(255, 160, 0, 0.5) 32%, transparent 72%);
+}
+
+.fusion-flash.active {
+  animation: fusion-flash 0.8s ease-out;
+}
+
+@keyframes fusion-flash {
+  0% { opacity: 0; transform: scale(0.5); }
+  22% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+
+/* ---- Fusion (merge) scene: sacrificed plushies converge into a core ---- */
+
+.fusion {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 65;
+  pointer-events: none;
+}
+
+.fusion.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fusion-stage {
+  position: relative;
+  width: 320px;
+  height: 320px;
+}
+
+.fusion-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 264px;
+  height: 264px;
+  margin: -132px 0 0 -132px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 180, 0, 0.55) 45deg, transparent 90deg, rgba(255, 224, 130, 0.4) 200deg, transparent 250deg, rgba(255, 180, 0, 0.5) 300deg, transparent 340deg);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%, #000 64%, transparent 66%);
+  mask: radial-gradient(circle, transparent 58%, #000 60%, #000 64%, transparent 66%);
+  animation: fusion-spin 1.8s linear infinite;
+}
+
+@keyframes fusion-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fusion-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #ffd54f 45%, #ff9800 100%);
+  box-shadow: 0 0 40px 18px rgba(255, 170, 0, 0.7);
+  animation: fusion-core-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes fusion-core-pulse {
+  0%, 100% { transform: scale(0.85); box-shadow: 0 0 30px 12px rgba(255, 170, 0, 0.55); }
+  50% { transform: scale(1.2); box-shadow: 0 0 70px 30px rgba(255, 190, 0, 0.95); }
+}
+
+.fusion-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.fusion-particle {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fusion-particle-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes fusion-particle-breathe {
+  0%, 100% { transform: scale(0.92) translateY(0); }
+  50% { transform: scale(1.08) translateY(-6px); }
+}
+
+.fusion-particle img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  filter: drop-shadow(0 0 8px rgba(255, 180, 0, 0.7));
+}
+
+.fusion-particle .p-emoji {
+  font-size: 40px;
+}
+
 .viewer {
   font-family: 'Open Sans', system-ui, sans-serif;
   font-size: 15px;
@@ -119,6 +244,21 @@ mdui-card.card {
   margin-bottom: 12px;
 }
 
+.merged-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f0f0f;
+  background: linear-gradient(135deg, #ffd54f, #ff9800);
+  box-shadow: 0 0 14px rgba(255, 152, 0, 0.6);
+}
+
 .series {
   font-family: 'Open Sans', system-ui, sans-serif;
   font-size: 14px;
@@ -166,6 +306,16 @@ mdui-card.card {
   border-radius: 18px;
   background: linear-gradient(160deg, #1f2430 0%, #14161f 100%);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px 2px var(--rarity-color);
+}
+
+.notify-card.fusion {
+  border-color: #ffc400;
+  animation: notify-fusion 0.8s ease-out;
+}
+
+@keyframes notify-fusion {
+  0% { transform: scale(0.5); opacity: 0; box-shadow: 0 0 40px 8px rgba(255, 180, 0, 0.9); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px 2px var(--rarity-color); }
 }
 
 .notify-inner {

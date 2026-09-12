@@ -1,6 +1,7 @@
-const state = { rarities: [], plushies: [], settings: {}, images: [], sounds: [] };
+const state = { rarities: [], plushies: [], settings: {}, merges: [], images: [], sounds: [] };
 let editingRarity = null;
 let editingPlushie = null;
+let editingMerge = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -102,9 +103,53 @@ function renderSoundSelect() {
     ).join('');
 }
 
+function renderMergeSourceSelect() {
+  const select = $('merge-source');
+  select.innerHTML = state.rarities.length
+    ? state.rarities.map((r) =>
+        `<mdui-menu-item value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</mdui-menu-item>`
+      ).join('')
+    : '<mdui-menu-item value="">No rarities</mdui-menu-item>';
+}
+
+function renderMergeSoundSelect() {
+  const select = $('merge-sound');
+  select.innerHTML = '<mdui-menu-item value="">No sound</mdui-menu-item>' +
+    state.sounds.map((s) =>
+      `<mdui-menu-item value="${escapeHtml(s)}">${escapeHtml(s)}</mdui-menu-item>`
+    ).join('');
+}
+
+function renderMerges() {
+  const list = $('merge-list');
+  if (state.merges.length === 0) {
+    list.innerHTML = emptyItem('No merges yet. Define one above.');
+    return;
+  }
+  list.innerHTML = state.merges.map((m) => {
+    const r = rarityById(m.sourceRarity);
+    const sub = [`+${m.bonusWeight} weight`, m.sound ? `sound: ${m.sound}` : null].filter(Boolean).join(' · ');
+    return `
+      <mdui-list-item nonclickable>
+        <div slot="custom" class="row">
+          <div class="row-meta">
+            <div class="row-title">${escapeHtml(r ? r.name : m.sourceRarity)} × ${m.count}</div>
+            <div class="row-sub">${escapeHtml(sub || '—')}</div>
+          </div>
+          <mdui-button-icon icon="auto_awesome" data-simulate-merge="${m.id}"></mdui-button-icon>
+          <mdui-button-icon icon="edit" data-edit-merge="${m.id}"></mdui-button-icon>
+          <mdui-button-icon icon="delete" data-del-merge="${m.id}"></mdui-button-icon>
+        </div>
+      </mdui-list-item>
+    `;
+  }).join('');
+}
+
 function renderSettings() {
   $('set-gacha').value = state.settings.commands?.gacha ?? 'gacha';
   $('set-collection').value = state.settings.commands?.collection ?? 'plushies';
+  $('set-merge').value = state.settings.commands?.merge ?? 'merge';
+  $('set-confirm').value = state.settings.commands?.confirm ?? 'confirm';
   $('set-cooldown').value = String(state.settings.cooldownSeconds ?? 30);
   $('set-reveal').value = String(state.settings.revealDurationMs ?? 6000);
   $('set-reveal-style').value = state.settings.revealStyle ?? 'card';
@@ -116,7 +161,10 @@ function renderAll() {
   renderRaritySelect();
   renderImageSelect();
   renderSoundSelect();
+  renderMergeSourceSelect();
+  renderMergeSoundSelect();
   renderPlushies();
+  renderMerges();
   renderSettings();
 }
 
@@ -176,6 +224,8 @@ $('settings-form').addEventListener('submit', async (e) => {
       commands: {
         gacha: $('set-gacha').value.trim(),
         collection: $('set-collection').value.trim(),
+        merge: $('set-merge').value.trim(),
+        confirm: $('set-confirm').value.trim(),
       },
       cooldownSeconds: Number($('set-cooldown').value),
       revealDurationMs: Number($('set-reveal').value),
@@ -236,6 +286,26 @@ $('plushie-cancel').addEventListener('click', () => {
   $('plushie-dialog').open = false;
 });
 
+$('merge-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    sourceRarity: $('merge-source').value,
+    count: Number($('merge-count').value),
+    bonusWeight: Number($('merge-bonus').value),
+    sound: $('merge-sound').value || null,
+  };
+  try {
+    if (editingMerge) {
+      await api(`/api/merges/${editingMerge}`, 'PUT', body);
+    } else {
+      await api('/api/merges', 'POST', body);
+    }
+    cancelMergeEdit();
+    await loadState();
+    mdui.snackbar({ message: 'Merge saved' });
+  } catch (err) { mdui.snackbar({ message: err.message }); }
+});
+
 $('test-roll').addEventListener('click', async () => {
   try {
     await api('/api/test-roll', 'POST');
@@ -264,6 +334,9 @@ document.addEventListener('click', async (e) => {
   const editPlushie = findInPath(e, '[data-edit-plushie]');
   const delPlushie = findInPath(e, '[data-del-plushie]');
   const revealPlushie = findInPath(e, '[data-reveal-plushie]');
+  const editMerge = findInPath(e, '[data-edit-merge]');
+  const delMerge = findInPath(e, '[data-del-merge]');
+  const simulateMerge = findInPath(e, '[data-simulate-merge]');
 
   if (editRarity) {
     const r = rarityById(editRarity.dataset.editRarity);
@@ -321,6 +394,43 @@ document.addEventListener('click', async (e) => {
     try {
       await api(`/api/plushies/${revealPlushie.dataset.revealPlushie}/reveal`, 'POST');
     } catch (err) { mdui.snackbar({ message: err.message }); }
+    return;
+  }
+  if (simulateMerge) {
+    try {
+      await api(`/api/merges/${simulateMerge.dataset.simulateMerge}/simulate`, 'POST');
+    } catch (err) { mdui.snackbar({ message: err.message }); }
+    return;
+  }
+  if (editMerge) {
+    const m = state.merges.find((x) => x.id === editMerge.dataset.editMerge);
+    if (!m) return;
+    const soundSelect = $('merge-sound');
+    if (m.sound && !state.sounds.includes(m.sound)) {
+      soundSelect.insertAdjacentHTML('beforeend',
+        `<mdui-menu-item value="${escapeHtml(m.sound)}">${escapeHtml(m.sound)}</mdui-menu-item>`);
+    }
+    $('merge-source').value = m.sourceRarity;
+    $('merge-count').value = String(m.count);
+    $('merge-bonus').value = String(m.bonusWeight);
+    soundSelect.value = m.sound || '';
+    editingMerge = m.id;
+    $('merge-submit').textContent = 'Update merge';
+    return;
+  }
+  if (delMerge) {
+    try {
+      await mdui.confirm({
+        headline: 'Delete merge?',
+        description: 'This removes the merge recipe.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      });
+    } catch { return; }
+    try {
+      await api(`/api/merges/${delMerge.dataset.delMerge}`, 'DELETE');
+      await loadState();
+    } catch (err) { mdui.snackbar({ message: err.message }); }
   }
 });
 
@@ -331,6 +441,15 @@ function cancelRarityEdit() {
   $('rarity-color').value = '#9ca3af';
   $('rarity-sound').value = '';
   $('rarity-submit').textContent = 'Add rarity';
+}
+
+function cancelMergeEdit() {
+  editingMerge = null;
+  $('merge-source').value = '';
+  $('merge-count').value = '';
+  $('merge-bonus').value = '';
+  $('merge-sound').value = '';
+  $('merge-submit').textContent = 'Add merge';
 }
 
 // ---- Socket connection status -------------------------------------------

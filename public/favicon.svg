@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Modern Squircle Background -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="#0d0612" stroke="#5e246f" stroke-width="12" />
+  
+  <!-- Stylized Flat X representing Xetis -->
+  <!-- Cyan Diagonal (\) -->
+  <line x1="140" y1="140" x2="372" y2="372" stroke="#00f6ff" stroke-width="64" stroke-linecap="round" />
+  
+  <!-- Pink/Magenta Diagonals (/) split to create a clean overlapping effect -->
+  <line x1="372" y1="140" x2="292" y2="220" stroke="#be29ec" stroke-width="64" stroke-linecap="round" />
+  <line x1="220" y1="292" x2="140" y2="372" stroke="#be29ec" stroke-width="64" stroke-linecap="round" />
+</svg>
