@@ -20,6 +20,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+let twitchConnected = false;
+const twitchConfigured = !!(config.channel && config.botUsername && config.oauthToken);
+
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
 
@@ -29,11 +32,15 @@ app.get('/gacha', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'gacha.html')
 
 function publicState() {
   const { rarities, plushies } = store.getPlushiesData();
-  return { rarities, plushies, settings: store.getSettings(), merges: store.getMerges(), images: listImages(), sounds: listSounds() };
+  return { rarities, plushies, settings: store.getSettings(), merges: store.getMerges(), images: listImages(), sounds: listSounds(), twitchConnected, twitchConfigured };
 }
 
 function broadcastState() {
   io.emit('state', publicState());
+}
+
+function broadcastStatus() {
+  io.emit('status', { twitchConnected });
 }
 
 // ---- REST API -----------------------------------------------------------
@@ -170,7 +177,7 @@ app.post('/api/rescan', (req, res) => {
 app.get('/api/merges', (req, res) => res.json(store.getMerges()));
 
 app.post('/api/merges', (req, res) => {
-  const { sourceRarity, count, bonusWeight, sound } = req.body || {};
+  const { sourceRarity, count, bonusWeight, sound, superiorOnly } = req.body || {};
   if (!sourceRarity) return res.status(400).json({ error: 'sourceRarity is required' });
   const merges = store.getMerges();
   const recipe = {
@@ -179,6 +186,7 @@ app.post('/api/merges', (req, res) => {
     count: Number(count) || 0,
     bonusWeight: Number(bonusWeight) || 0,
     sound: sound || null,
+    superiorOnly: !!superiorOnly,
   };
   merges.push(recipe);
   store.saveMerges(merges);
@@ -190,11 +198,12 @@ app.put('/api/merges/:id', (req, res) => {
   const merges = store.getMerges();
   const recipe = merges.find((m) => m.id === req.params.id);
   if (!recipe) return res.status(404).json({ error: 'merge not found' });
-  const { sourceRarity, count, bonusWeight, sound } = req.body || {};
+  const { sourceRarity, count, bonusWeight, sound, superiorOnly } = req.body || {};
   if (sourceRarity !== undefined) recipe.sourceRarity = sourceRarity;
   if (count !== undefined) recipe.count = Number(count) || 0;
   if (bonusWeight !== undefined) recipe.bonusWeight = Number(bonusWeight) || 0;
   if (sound !== undefined) recipe.sound = sound || null;
+  if (superiorOnly !== undefined) recipe.superiorOnly = !!superiorOnly;
   store.saveMerges(merges);
   broadcastState();
   res.json(recipe);
@@ -220,7 +229,7 @@ app.post('/api/merges/:id/simulate', (req, res) => {
   const source = data.rarities.find((r) => r.id === recipe.sourceRarity);
   if (!source) return res.status(400).json({ error: 'source rarity not found' });
 
-  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight) });
+  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight), superiorOnly: !!recipe.superiorOnly });
   if (!result) return res.status(400).json({ error: 'No plushies available' });
 
   const sacrificed = data.plushies
@@ -389,7 +398,7 @@ function handleConfirm(viewer, displayName) {
     return;
   }
 
-  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight) });
+  const result = rollPlushie(data, { sourceWeight: Number(source.weight), bonusWeight: Number(recipe.bonusWeight), superiorOnly: !!recipe.superiorOnly });
   if (!result) {
     pendingMerges.delete(viewer);
     twitchClient?.say(config.channel, `@${displayName}, the gacha is empty! Ask the streamer to add plushies.`);
@@ -458,6 +467,10 @@ twitchClient = startTwitch({
   token: config.oauthToken,
   onCommand: handleCommand,
   onLog: (msg) => console.log(`[twitch] ${msg}`),
+  onStatus: (connected) => {
+    twitchConnected = connected;
+    broadcastStatus();
+  },
 });
 
 server.listen(config.port, () => {

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-  <mdui-layout>
+  <mdui-layout full-height>
     <mdui-top-app-bar scroll-behavior="elevate">
       <mdui-button-icon icon="inventory_2"></mdui-button-icon>
       <mdui-top-app-bar-title>Gacha Thing</mdui-top-app-bar-title>
@@ -24,70 +24,92 @@
       <mdui-button variant="filled" icon="casino" id="test-roll">Test roll</mdui-button>
     </mdui-top-app-bar>
 
+    <mdui-navigation-drawer open class="admin-nav">
+      <mdui-list>
+        <mdui-list-subheader>Admin</mdui-list-subheader>
+        <mdui-list-item rounded icon="settings" id="nav-settings" active>Settings</mdui-list-item>
+        <mdui-list-item rounded icon="star" id="nav-rarities">Rarities</mdui-list-item>
+        <mdui-list-item rounded icon="inventory_2" id="nav-plushies">Plushies</mdui-list-item>
+        <mdui-list-item rounded icon="auto_awesome" id="nav-merges">Merges</mdui-list-item>
+      </mdui-list>
+    </mdui-navigation-drawer>
+
     <mdui-layout-main>
       <div class="container">
 
-        <mdui-card variant="filled">
-          <div class="pad">
-            <h2 class="section-title">Settings</h2>
-            <form id="settings-form" class="grid">
-              <mdui-text-field id="set-gacha" label="Gacha command" icon="casino"></mdui-text-field>
-              <mdui-text-field id="set-collection" label="Collection command" icon="inventory_2"></mdui-text-field>
-              <mdui-text-field id="set-merge" label="Merge command" icon="swap_horiz"></mdui-text-field>
-              <mdui-text-field id="set-confirm" label="Confirm command" icon="check"></mdui-text-field>
-              <mdui-text-field id="set-cooldown" label="Cooldown (seconds)" type="number" icon="timer"></mdui-text-field>
-              <mdui-text-field id="set-reveal" label="Reveal duration (ms)" type="number" icon="schedule"></mdui-text-field>
-              <mdui-select id="set-reveal-style" label="Reveal style" icon="animation">
-                <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
-                <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
-              </mdui-select>
-              <mdui-select id="set-collection-style" label="Collection style" icon="inventory_2">
-                <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
-                <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
-              </mdui-select>
-              <mdui-button type="submit" variant="tonal">Save settings</mdui-button>
-            </form>
-          </div>
-        </mdui-card>
+        <section id="section-settings" class="section">
+          <mdui-card variant="filled">
+            <div class="pad">
+              <h2 class="section-title">Settings</h2>
+              <form id="settings-form" class="grid">
+                <mdui-text-field id="set-gacha" label="Gacha command" icon="casino"></mdui-text-field>
+                <mdui-text-field id="set-collection" label="Collection command" icon="inventory_2"></mdui-text-field>
+                <mdui-text-field id="set-merge" label="Merge command" icon="swap_horiz"></mdui-text-field>
+                <mdui-text-field id="set-confirm" label="Confirm command" icon="check"></mdui-text-field>
+                <mdui-text-field id="set-cooldown" label="Cooldown (seconds)" type="number" icon="timer"></mdui-text-field>
+                <mdui-text-field id="set-reveal" label="Reveal duration (ms)" type="number" icon="schedule"></mdui-text-field>
+                <mdui-select id="set-reveal-style" label="Reveal style" icon="animation">
+                  <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
+                  <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
+                </mdui-select>
+                <mdui-select id="set-collection-style" label="Collection style" icon="inventory_2">
+                  <mdui-menu-item value="card">Card (centered)</mdui-menu-item>
+                  <mdui-menu-item value="notification">Notification (corner)</mdui-menu-item>
+                </mdui-select>
+                <mdui-button type="submit" variant="tonal">Save settings</mdui-button>
+              </form>
+            </div>
+          </mdui-card>
+        </section>
 
-        <mdui-card variant="filled">
-          <div class="pad">
-            <h2 class="section-title">Rarities</h2>
-            <form id="rarity-form" class="grid">
-              <mdui-text-field id="rarity-name" label="Name" placeholder="Common"></mdui-text-field>
-              <mdui-text-field id="rarity-weight" label="Weight" type="number" placeholder="70"></mdui-text-field>
-              <label class="color-field">
-                <span>Color</span>
-                <input type="color" id="rarity-color" value="#9ca3af">
-              </label>
-              <mdui-select id="rarity-sound" label="Sound" icon="music_note"></mdui-select>
-              <mdui-button type="submit" id="rarity-submit">Add rarity</mdui-button>
-            </form>
-            <mdui-list id="rarity-list"></mdui-list>
-          </div>
-        </mdui-card>
+        <section id="section-rarities" class="section" hidden>
+          <mdui-card variant="filled">
+            <div class="pad">
+              <h2 class="section-title">Rarities</h2>
+              <form id="rarity-form" class="grid">
+                <mdui-text-field id="rarity-name" label="Name" placeholder="Common"></mdui-text-field>
+                <mdui-text-field id="rarity-weight" label="Weight" type="number" placeholder="70"></mdui-text-field>
+                <label class="color-field">
+                  <span>Color</span>
+                  <input type="color" id="rarity-color" value="#9ca3af">
+                </label>
+                <mdui-select id="rarity-sound" label="Sound" icon="music_note"></mdui-select>
+                <mdui-button type="submit" id="rarity-submit">Add rarity</mdui-button>
+              </form>
+              <mdui-list id="rarity-list"></mdui-list>
+            </div>
+          </mdui-card>
+        </section>
 
-        <mdui-card variant="filled">
-          <div class="pad">
-            <h2 class="section-title">Plushies</h2>
-            <mdui-list id="plushie-list"></mdui-list>
-          </div>
-        </mdui-card>
+        <section id="section-plushies" class="section" hidden>
+          <mdui-card variant="filled">
+            <div class="pad">
+              <h2 class="section-title">Plushies</h2>
+              <mdui-list id="plushie-list"></mdui-list>
+            </div>
+          </mdui-card>
+        </section>
 
-        <mdui-card variant="filled">
-          <div class="pad">
-            <h2 class="section-title">Merges</h2>
-            <p class="merge-hint">Sacrifice plushies of a tier to boost the chance of superior tiers on the next roll.</p>
-            <form id="merge-form" class="grid">
-              <mdui-select id="merge-source" label="Source tier" icon="swap_horiz"></mdui-select>
-              <mdui-text-field id="merge-count" label="Required count" type="number" placeholder="5"></mdui-text-field>
-              <mdui-text-field id="merge-bonus" label="Bonus weight" type="number" placeholder="20"></mdui-text-field>
-              <mdui-select id="merge-sound" label="Sound" icon="music_note"></mdui-select>
-              <mdui-button type="submit" id="merge-submit">Add merge</mdui-button>
-            </form>
-            <mdui-list id="merge-list"></mdui-list>
-          </div>
-        </mdui-card>
+        <section id="section-merges" class="section" hidden>
+          <mdui-card variant="filled">
+            <div class="pad">
+              <h2 class="section-title">Merges</h2>
+              <p class="merge-hint">Sacrifice plushies of a tier to boost the chance of superior tiers on the next roll.</p>
+              <form id="merge-form" class="grid">
+                <mdui-select id="merge-source" label="Source tier" icon="swap_horiz"></mdui-select>
+                <mdui-text-field id="merge-count" label="Required count" type="number" placeholder="5"></mdui-text-field>
+                <mdui-text-field id="merge-bonus" label="Bonus weight" type="number" placeholder="20"></mdui-text-field>
+                <mdui-select id="merge-sound" label="Sound" icon="music_note"></mdui-select>
+                <label class="switch-field">
+                  <mdui-switch id="merge-superior"></mdui-switch>
+                  <span>Superior tiers only</span>
+                </label>
+                <mdui-button type="submit" id="merge-submit">Add merge</mdui-button>
+              </form>
+              <mdui-list id="merge-list"></mdui-list>
+            </div>
+          </mdui-card>
+        </section>
 
       </div>
     </mdui-layout-main>

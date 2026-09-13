@@ -1,6 +1,6 @@
 import tmi from 'tmi.js';
 
-export function startTwitch({ channel, username, token, onCommand, onLog }) {
+export function startTwitch({ channel, username, token, onCommand, onLog, onStatus }) {
   if (!channel || !username || !token) {
     onLog('Twitch not configured — chat disabled. Set TWITCH_CHANNEL, TWITCH_BOT_USERNAME and TWITCH_OAUTH_TOKEN in .env.');
     return null;
@@ -13,8 +13,14 @@ export function startTwitch({ channel, username, token, onCommand, onLog }) {
     channels: [channel],
   });
 
-  client.on('connected', () => onLog(`Connected to #${channel} as ${username}`));
-  client.on('disconnected', (reason) => onLog(`Disconnected from Twitch: ${reason}`));
+  client.on('connected', () => {
+    onLog(`Connected to #${channel} as ${username}`);
+    onStatus?.(true);
+  });
+  client.on('disconnected', (reason) => {
+    onLog(`Disconnected from Twitch: ${reason}`);
+    onStatus?.(false);
+  });
 
   client.on('message', (target, context, msg, self) => {
     if (self) return;

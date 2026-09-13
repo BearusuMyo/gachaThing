@@ -14,9 +14,14 @@ export function rollPlushie({ rarities, plushies }, boost = null) {
   if (available.length === 0) return null;
 
   // Compute effective weights. A boost adds weight to every "superior" tier
-  // (weight lower than the source tier's weight).
+  // (weight lower than the source tier's weight). When superiorOnly is set,
+  // tiers with weight >= sourceWeight are excluded entirely.
   const candidates = rarities
     .filter((r) => available.some((p) => p.rarity === r.id))
+    .filter((r) => {
+      if (!boost || !boost.superiorOnly) return true;
+      return Number(r.weight || 0) < boost.sourceWeight;
+    })
     .map((r) => {
       let weight = Number(r.weight || 0);
       if (boost && Number(r.weight || 0) < boost.sourceWeight) {

@@ -1,5 +1,15 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+mdui-layout-main {
+  overflow-y: auto;
 }
 
 .section-title,
@@ -8,12 +18,21 @@ mdui-top-app-bar-title {
 }
 
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
   padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+}
+
+.section mdui-card {
+  width: 100%;
+}
+
+.admin-nav {
+  width: 256px;
+}
+
+.admin-nav::part(panel) {
+  height: 100%;
+  background-color: rgb(var(--mdui-color-surface-container-low));
+  border-right: 1px solid rgb(var(--mdui-color-outline-variant));
 }
 
 .pad {
@@ -28,6 +47,14 @@ mdui-top-app-bar-title {
 
 .merge-hint {
   margin: -8px 0 16px;
+  font-size: 13px;
+  color: rgb(var(--mdui-color-on-surface-variant));
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
   color: rgb(var(--mdui-color-on-surface-variant));
 }

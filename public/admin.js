@@ -128,7 +128,7 @@ function renderMerges() {
   }
   list.innerHTML = state.merges.map((m) => {
     const r = rarityById(m.sourceRarity);
-    const sub = [`+${m.bonusWeight} weight`, m.sound ? `sound: ${m.sound}` : null].filter(Boolean).join(' · ');
+    const sub = [`+${m.bonusWeight} weight`, m.superiorOnly ? 'superior only' : null, m.sound ? `sound: ${m.sound}` : null].filter(Boolean).join(' · ');
     return `
       <mdui-list-item nonclickable>
         <div slot="custom" class="row">
@@ -293,6 +293,7 @@ $('merge-form').addEventListener('submit', async (e) => {
     count: Number($('merge-count').value),
     bonusWeight: Number($('merge-bonus').value),
     sound: $('merge-sound').value || null,
+    superiorOnly: $('merge-superior').checked,
   };
   try {
     if (editingMerge) {
@@ -414,6 +415,7 @@ document.addEventListener('click', async (e) => {
     $('merge-count').value = String(m.count);
     $('merge-bonus').value = String(m.bonusWeight);
     soundSelect.value = m.sound || '';
+    $('merge-superior').checked = !!m.superiorOnly;
     editingMerge = m.id;
     $('merge-submit').textContent = 'Update merge';
     return;
@@ -449,6 +451,7 @@ function cancelMergeEdit() {
   $('merge-count').value = '';
   $('merge-bonus').value = '';
   $('merge-sound').value = '';
+  $('merge-superior').checked = false;
   $('merge-submit').textContent = 'Add merge';
 }
 
@@ -471,3 +474,18 @@ socket.on('state', (s) => {
 });
 
 loadState();
+
+// ---- Navigation ----------------------------------------------------------
+
+const SECTIONS = ['settings', 'rarities', 'plushies', 'merges'];
+
+function showSection(name) {
+  SECTIONS.forEach((n) => {
+    document.getElementById(`section-${n}`).hidden = (n !== name);
+    document.getElementById(`nav-${n}`).active = (n === name);
+  });
+}
+
+SECTIONS.forEach((name) => {
+  document.getElementById(`nav-${name}`).addEventListener('click', () => showSection(name));
+});

@@ -33,12 +33,19 @@ const fusionFlashEl = document.getElementById('fusion-flash');
 const fusionEl = document.getElementById('fusion');
 const fusionParticlesEl = document.getElementById('fusion-particles');
 
+const disconnectEl = document.getElementById('disconnect');
+const disconnectTextEl = document.getElementById('disconnect-text');
+
 let revealDuration = 6000;
 let revealStyle = 'card';
 let collectionStyle = 'card';
 let collectionTimer = null;
 const COLLECTION_DURATION = 15000;
 const FUSION_DURATION = 1300;
+
+let serverConnected = true;
+let twitchConnected = true;
+let twitchConfigured = false;
 
 const queue = [];
 let busy = false;
@@ -140,6 +147,16 @@ socket.on('state', (state) => {
     if (state.settings.revealStyle) revealStyle = state.settings.revealStyle;
     if (state.settings.collectionStyle) collectionStyle = state.settings.collectionStyle;
   }
+  if (typeof state.twitchConnected === 'boolean') twitchConnected = state.twitchConnected;
+  if (typeof state.twitchConfigured === 'boolean') twitchConfigured = state.twitchConfigured;
+  updateDisconnect();
+});
+
+socket.on('connect', () => { serverConnected = true; updateDisconnect(); });
+socket.on('disconnect', () => { serverConnected = false; updateDisconnect(); });
+socket.on('connect_error', () => { serverConnected = false; updateDisconnect(); });
+socket.on('status', (s) => {
+  if (typeof s.twitchConnected === 'boolean') { twitchConnected = s.twitchConnected; updateDisconnect(); }
 });
 
 socket.on('gacha:reveal', (payload) => {
@@ -148,6 +165,18 @@ socket.on('gacha:reveal', (payload) => {
 });
 
 socket.on('collection:show', (data) => showCollection(data));
+
+function updateDisconnect() {
+  if (!serverConnected) {
+    disconnectTextEl.textContent = 'Application unreachable — reconnecting…';
+    disconnectEl.classList.remove('hidden');
+  } else if (twitchConfigured && !twitchConnected) {
+    disconnectTextEl.textContent = 'Twitch connection lost';
+    disconnectEl.classList.remove('hidden');
+  } else {
+    disconnectEl.classList.add('hidden');
+  }
+}
 
 function processQueue() {
   if (busy || queue.length === 0) return;
