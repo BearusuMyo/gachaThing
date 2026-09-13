@@ -1,20 +1,27 @@
 # 🧸 Gacha Thing
 
-A self-hosted Twitch chat gacha machine. Viewers type a command in chat to
-"pull" a random plushie, which is revealed on a stream overlay and added to
-their persistent collection. The streamer manages plushies (name, rarity,
-description, series, artist) through a config page.
+A self-hosted Twitch chat gacha machine. Viewers type a command in chat to "pull"
+a random plushie, which is revealed on a stream overlay (with sound) and added to
+their persistent collection. Viewers can also **fuse** several plushies of a tier
+for a boosted chance at rarer tiers. The streamer manages everything — rarities,
+plushies, sounds, fusion recipes — through an admin page.
 
 ## Features
 
-- Watches Twitch chat for a configurable gacha command (`!gacha` by default).
-- Weighted rarity system — rarities are defined by the streamer with a numeric
-  weight, so pull chances are fully configurable.
+- Watches Twitch chat for configurable commands (`!gacha`, `!plushies`, `!merge`,
+  `!confirm` by default).
+- Weighted rarity system — each rarity has a numeric weight, so pull chances are
+  fully configurable.
 - Plushie catalog with **name**, **rarity**, **description**, **series**,
-  **artist**, and an **image**.
-- Persistent per-viewer collections (stored in JSON files).
-- A stream overlay that stays hidden until a command triggers a reveal.
-- An admin page (`--admin` flag) for configuring rarities, plushies, and settings.
+  **artist**, and an **image** (auto-detected from a folder).
+- Per-rarity **sounds** played on reveal, plus a separate **fusion sound**.
+- **Fusion (merge)**: sacrifice N plushies of a tier to boost the chance of
+  superior tiers (optionally *superior-only*), with a dedicated fusion animation.
+- On-screen **collection** viewer (grid of cards with auto-scroll), shown via the
+  `!plushies` command.
+- Configurable reveal style: centered **card** or corner **notification**.
+- An **events** log (JSONL audit trail) with replay from the admin page.
+- A disconnect banner on the overlay when the app or Twitch connection drops.
 
 ## Setup
 
@@ -82,11 +89,13 @@ twitch token -u -s "chat:read chat:edit"
 
 ## Pages
 
-- **Admin (config):** `http://localhost:3000/admin` — add/edit/delete rarities
-  and plushies, change commands, cooldown, and reveal duration, and trigger a
-  test roll.
+- **Admin (config):** `http://localhost:3000/admin` — a navigation drawer with
+  sections for **Settings** (commands, cooldown, reveal/collection style),
+  **Rarities** (name/weight/color/sound), **Plushies** (add via a FAB + dialog),
+  **Merges** (fusion recipes), and **Events** (audit log with replay).
 - **Gacha overlay:** `http://localhost:3000/gacha` — add this as a browser
-  source in OBS. It's transparent and hidden until a viewer rolls.
+  source in OBS. It's transparent and hidden until a viewer rolls, and shows a
+  banner if the app/Twitch connection drops.
 
 The `--admin` flag only changes which page the root URL `/` redirects to; both
 pages are always available at their own paths.
@@ -105,23 +114,55 @@ will automatically create a plushie entry for it:
 You can also click "Rescan images" on the admin page to pick up new files
 immediately.
 
+## Sounds
+
+Drop sound files into `public/sounds/` (`mp3`, `wav`, `ogg`, `m4a`, `aac`,
+`flac`, `opus`, `weba`). In the admin you can:
+
+- assign a sound to each **rarity** (played when that rarity is revealed), and
+- assign a **fusion sound** per merge recipe (played before the fusion animation).
+
+Note: browsers/OBS block unmuted autoplay until a user gesture. For OBS, launch
+it with `--autoplay-policy=no-user-gesture-required` (or interact with the
+browser source once) so sounds play on stream.
+
+## Fusion (merge)
+
+In the **Merges** admin section, define recipes: a source tier, how many plushies
+to sacrifice (`count`), a `bonusWeight` added to every **superior** tier (a tier
+with a lower weight), an optional fusion sound, and a "superior tiers only"
+toggle (which excludes the source and lower tiers entirely).
+
+- `!merge <tier>` — checks the viewer owns enough plushies, then asks to confirm.
+- `!confirm` — re-checks, then sacrifices the plushies and rolls immediately
+  with the boosted weights, revealing the result on the overlay.
+
 ## How it works
 
-1. A viewer types `!gacha` (configurable) in chat.
+1. A viewer types `!gacha` in chat.
 2. The bot picks a rarity weighted by its configured weight, then a random
    plushie within that rarity.
 3. The plushie is added to the viewer's collection and the reveal is pushed to
-   the overlay over Socket.IO.
+   the overlay over Socket.IO (playing the rarity's sound).
 4. The overlay animates the reveal, then hides again after the configured duration.
 
-A `!plushies` (configurable) command shows a viewer's current collection in chat.
+`!plushies` shows a viewer's collection on the overlay (a grid that auto-scrolls
+when it overflows). A viewer can also `!merge` a tier (then `!confirm`) to
+sacrifice plushies for a boosted roll — a separate fusion animation plays first
+(the sacrificed plushies converge, then the result bursts in).
+
+Every roll and merge is written to an append-only log, viewable (and replayable)
+from the admin **Events** page.
 
 ## Data storage
 
-Plushie catalog and collections live in `data/` (gitignored):
+Everything lives in `data/` (gitignored):
 
 - `plushies.json` — rarity tiers and the plushie catalog.
 - `collections.json` — per-viewer collections.
-- `settings.json` — commands, cooldown, and reveal duration.
+- `settings.json` — commands, cooldown, reveal duration, styles.
+- `merges.json` — fusion recipes.
+- `events.jsonl` — append-only audit log (rotates to `events.YYYYMMDD.jsonl`).
 
-Plushie images live in `public/plushies/` and are served at `/plushies/<file>`.
+Plushie images live in `public/plushies/` (`/plushies/<file>`) and sounds in
+`public/sounds/` (`/sounds/<file>`).
