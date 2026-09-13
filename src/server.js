@@ -241,6 +241,70 @@ app.post('/api/merges/:id/simulate', (req, res) => {
   res.json(result);
 });
 
+// Events (audit log)
+function resolvePlushie(data, id) {
+  const p = data.plushies.find((x) => x.id === id);
+  return p ? { id: p.id, name: p.name, image: p.image } : null;
+}
+
+function resolveRarity(data, id) {
+  const r = data.rarities.find((x) => x.id === id);
+  return r ? { id: r.id, name: r.name, color: r.color } : null;
+}
+
+function enrichEvent(e, data) {
+  const base = { ts: e.ts, type: e.type, viewer: e.viewer, raw: e.raw };
+  switch (e.type) {
+    case 'roll':
+      return { ...base, plushie: resolvePlushie(data, e.plushie), rarity: resolveRarity(data, e.rarity) };
+    case 'merge':
+      return { ...base, source: resolveRarity(data, e.source), count: e.count, plushie: resolvePlushie(data, e.result), rarity: resolveRarity(data, e.resultRarity) };
+    case 'merge-request':
+      return { ...base, source: resolveRarity(data, e.source), count: e.count };
+    case 'merge-deny':
+      return { ...base, source: resolveRarity(data, e.source), reason: e.reason, have: e.have, need: e.need };
+    default:
+      return base;
+  }
+}
+
+app.get('/api/events', (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 200, 1000);
+  const events = store.readEvents(limit).map((e) => enrichEvent(e, store.getPlushiesData()));
+  res.json({ events });
+});
+
+app.post('/api/events/replay', (req, res) => {
+  const event = req.body || {};
+  const reveal = buildReplayReveal(event, store.getPlushiesData());
+  if (!reveal) return res.status(400).json({ error: 'This event cannot be replayed' });
+  emitReveal(reveal);
+  res.json({ ok: true });
+});
+
+function buildReplayReveal(event, data) {
+  const { rarities, plushies } = data;
+  const idOf = (x) => (typeof x === 'string' ? x : x && x.id);
+  if (event.type === 'roll') {
+    const plushie = plushies.find((p) => p.id === idOf(event.plushie));
+    if (!plushie) return null;
+    const rarity = rarities.find((r) => r.id === idOf(event.rarity)) || null;
+    return { viewer: event.viewer || 'replay', displayName: event.viewer || 'Replay', plushie, rarity };
+  }
+  if (event.type === 'merge') {
+    const plushie = plushies.find((p) => p.id === idOf(event.plushie ?? event.result));
+    if (!plushie) return null;
+    const rarity = rarities.find((r) => r.id === idOf(event.rarity ?? event.resultRarity)) || null;
+    const sourceId = idOf(event.source);
+    const sacrificed = plushies
+      .filter((p) => p.rarity === sourceId)
+      .slice(0, Math.min(event.count || 0, 6))
+      .map((p) => ({ id: p.id, name: p.name, image: p.image, count: 1 }));
+    return { viewer: event.viewer || 'replay', displayName: event.viewer || 'Replay', plushie, rarity, merged: true, sacrificed };
+  }
+  return null;
+}
+
 // ---- Gacha engine -------------------------------------------------------
 
 let twitchClient = null;

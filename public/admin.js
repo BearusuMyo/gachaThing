@@ -338,6 +338,8 @@ document.addEventListener('click', async (e) => {
   const editMerge = findInPath(e, '[data-edit-merge]');
   const delMerge = findInPath(e, '[data-del-merge]');
   const simulateMerge = findInPath(e, '[data-simulate-merge]');
+  const replayEvent = findInPath(e, '[data-replay-event]');
+  const detailEvent = findInPath(e, '[data-detail-event]');
 
   if (editRarity) {
     const r = rarityById(editRarity.dataset.editRarity);
@@ -401,6 +403,18 @@ document.addEventListener('click', async (e) => {
     try {
       await api(`/api/merges/${simulateMerge.dataset.simulateMerge}/simulate`, 'POST');
     } catch (err) { mdui.snackbar({ message: err.message }); }
+    return;
+  }
+  if (replayEvent) {
+    try {
+      const event = JSON.parse(decodeURIComponent(replayEvent.dataset.replayEvent));
+      await api('/api/events/replay', 'POST', event);
+    } catch (err) { mdui.snackbar({ message: err.message }); }
+    return;
+  }
+  if (detailEvent) {
+    $('event-raw').textContent = prettyJson(decodeURIComponent(detailEvent.dataset.detailEvent));
+    $('event-dialog').open = true;
     return;
   }
   if (editMerge) {
@@ -477,15 +491,99 @@ loadState();
 
 // ---- Navigation ----------------------------------------------------------
 
-const SECTIONS = ['settings', 'rarities', 'plushies', 'merges'];
+const SECTIONS = ['settings', 'rarities', 'plushies', 'merges', 'events'];
 
 function showSection(name) {
   SECTIONS.forEach((n) => {
     document.getElementById(`section-${n}`).hidden = (n !== name);
     document.getElementById(`nav-${n}`).active = (n === name);
   });
+  if (name === 'events') loadEvents();
 }
 
 SECTIONS.forEach((name) => {
   document.getElementById(`nav-${name}`).addEventListener('click', () => showSection(name));
 });
+
+// ---- Events --------------------------------------------------------------
+
+function eventIcon(type) {
+  switch (type) {
+    case 'roll': return 'casino';
+    case 'merge': return 'auto_awesome';
+    case 'merge-request': return 'swap_horiz';
+    case 'merge-deny': return 'block';
+    default: return 'info';
+  }
+}
+
+function eventColor(e) {
+  if (e.rarity && e.rarity.color) return e.rarity.color;
+  if (e.source && e.source.color) return e.source.color;
+  return '#9aa3b2';
+}
+
+function rarityChip(r) {
+  if (!r) return '<span style="color:#888">unknown</span>';
+  return `<span style="color:${escapeHtml(r.color)}">${escapeHtml(r.name)}</span>`;
+}
+
+function eventSummary(e) {
+  switch (e.type) {
+    case 'roll': {
+      const p = e.plushie ? escapeHtml(e.plushie.name) : 'Unknown';
+      return `rolled <b>${p}</b> (${rarityChip(e.rarity)})`;
+    }
+    case 'merge': {
+      const p = e.plushie ? escapeHtml(e.plushie.name) : 'Unknown';
+      return `fused ${e.count}× ${rarityChip(e.source)} → <b>${p}</b> (${rarityChip(e.rarity)})`;
+    }
+    case 'merge-request':
+      return `requested a fusion (${e.count}× ${rarityChip(e.source)})`;
+    case 'merge-deny':
+      return `fusion denied — ${escapeHtml(e.reason || 'unknown reason')}`;
+    default:
+      return escapeHtml(e.type || 'event');
+  }
+}
+
+function renderEvents(events) {
+  const list = $('events-list');
+  if (!events || events.length === 0) {
+    list.innerHTML = emptyItem('No events yet. Rolls and fusions will appear here.');
+    return;
+  }
+  list.innerHTML = events.map((e) => {
+    const time = new Date(e.ts).toLocaleString();
+    const payload = encodeURIComponent(JSON.stringify(e));
+    const raw = encodeURIComponent(e.raw || JSON.stringify(e));
+    return `
+      <mdui-list-item nonclickable>
+        <div slot="custom" class="row">
+          <mdui-icon name="${eventIcon(e.type)}" style="color:${eventColor(e)}"></mdui-icon>
+          <div class="row-meta">
+            <div class="row-title">${eventSummary(e)}</div>
+            <div class="row-sub">${escapeHtml(e.viewer || '')} · ${escapeHtml(time)}</div>
+          </div>
+          <mdui-button-icon icon="replay" data-replay-event="${payload}"></mdui-button-icon>
+          <mdui-button-icon icon="code" data-detail-event="${raw}"></mdui-button-icon>
+        </div>
+      </mdui-list-item>
+    `;
+  }).join('');
+}
+
+async function loadEvents() {
+  try {
+    const data = await api('/api/events');
+    renderEvents(data.events);
+  } catch (err) { mdui.snackbar({ message: err.message }); }
+}
+
+function prettyJson(str) {
+  try { return JSON.stringify(JSON.parse(str), null, 2); }
+  catch { return str; }
+}
+
+$('events-refresh').addEventListener('click', () => loadEvents());
+$('event-close').addEventListener('click', () => { $('event-dialog').open = false; });

@@ -214,3 +214,24 @@ mdui-top-app-bar-title {
   font-size: 13px;
   padding: 8px 0;
 }
+
+.events-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.event-raw {
+  margin: 0;
+  padding: 12px;
+  max-height: 60vh;
+  overflow: auto;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background: rgb(var(--mdui-color-surface-container-highest));
+  color: rgb(var(--mdui-color-on-surface));
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

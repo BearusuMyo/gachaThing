@@ -132,3 +132,29 @@ export function appendEvent(event) {
   } catch { /* file may not exist yet */ }
   fs.appendFileSync(filePath, line);
 }
+
+export function readEvents(limit = 500) {
+  ensureDir();
+  let files = [];
+  try {
+    files = fs.readdirSync(DATA_DIR).filter((f) => f === FILES.events || /^events\.\d{8}\.jsonl$/.test(f));
+  } catch {
+    return [];
+  }
+  const lines = [];
+  for (const file of files) {
+    try {
+      const content = fs.readFileSync(path.join(DATA_DIR, file), 'utf8');
+      for (const line of content.split('\n')) {
+        const t = line.trim();
+        if (!t) continue;
+        try {
+          const obj = JSON.parse(t);
+          lines.push({ ...obj, raw: t });
+        } catch { /* skip corrupt lines */ }
+      }
+    } catch { /* skip unreadable files */ }
+  }
+  lines.sort((a, b) => String(b.ts || '').localeCompare(String(a.ts || '')));
+  return lines.slice(0, limit);
+}

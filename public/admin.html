@@ -31,6 +31,7 @@
         <mdui-list-item rounded icon="star" id="nav-rarities">Rarities</mdui-list-item>
         <mdui-list-item rounded icon="inventory_2" id="nav-plushies">Plushies</mdui-list-item>
         <mdui-list-item rounded icon="auto_awesome" id="nav-merges">Merges</mdui-list-item>
+        <mdui-list-item rounded icon="history" id="nav-events">Events</mdui-list-item>
       </mdui-list>
     </mdui-navigation-drawer>
 
@@ -111,6 +112,18 @@
           </mdui-card>
         </section>
 
+        <section id="section-events" class="section" hidden>
+          <mdui-card variant="filled">
+            <div class="pad">
+              <h2 class="section-title">Events</h2>
+              <div class="events-toolbar">
+                <mdui-button variant="text" icon="refresh" id="events-refresh">Refresh</mdui-button>
+              </div>
+              <mdui-list id="events-list"></mdui-list>
+            </div>
+          </mdui-card>
+        </section>
+
       </div>
     </mdui-layout-main>
   </mdui-layout>
@@ -127,6 +140,12 @@
     </form>
     <mdui-button slot="action" variant="text" id="plushie-cancel">Cancel</mdui-button>
     <mdui-button slot="action" variant="tonal" type="submit" form="plushie-form" id="plushie-submit">Save plushie</mdui-button>
+  </mdui-dialog>
+
+  <mdui-dialog id="event-dialog" close-on-esc close-on-overlay-click icon="code">
+    <span slot="headline">Event details</span>
+    <pre id="event-raw" class="event-raw"></pre>
+    <mdui-button slot="action" variant="text" id="event-close">Close</mdui-button>
   </mdui-dialog>
 
   <div class="fab-stack">
